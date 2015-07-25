@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using Windows.Foundation;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 
-namespace GraphX.METRO.Controls
+namespace GraphX.Controls
 {
     public static class TypeExtensions
     {
+        public static void Offset(this Point point, Point value)
+        {
+            point.X = point.X + value.X;
+            point.Y = point.Y + value.Y;
+        }
 
         public static void RotateAt(this Matrix imatrix, double angle, double centerX, double centerY)
         {
@@ -119,6 +123,12 @@ namespace GraphX.METRO.Controls
         public static Point Center(this Rect rect)
         {
             return new Point(rect.X + rect.Width * .5, rect.Y + rect.Height * .5);
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> list, Action<T> func)
+        {
+            foreach (var item in list)
+                func(item);
         }
     }
 }

@@ -1,4 +1,15 @@
-﻿RELEASE 2.1.9 WIP
+﻿WIP 2.2.1
+
+DETAILED CHANGELOG:
++ Added GroupId property to IGraphXVertex interface
++ Added parameters class RandomLayoutAlgorithmParams for corresponding algorithm. It contains Bounds property which can restrict vertex coordinates to respect provided bounds.
++ Added two methods to EdgeControl: GetEdgePointerForSource() and GetEdgePointerForTarget() which allows to get to edge pointer objects manualy
++ Fixed bindings to DefaultEdgePointer::Visibility property
++ Implemented edge cut logic for EdgePointer placed at edge 'source' to gain better visual quality like its 'target' counterpart
++ Implemented many changed in algorithm base classes, mainly in AlgorithmLayoutBase: made VisitedGraph and VertexPositions props assignable externally
++ Implemented RandomLayoutAlgorithms to derive from LayoutAlgorithmBase class
+
+RELEASE 2.2.0
 NEW TERMS: 
 	VAESPS - vertex and edge skip processing support
 	VCP - vertex connection point
@@ -7,28 +18,59 @@ HIGHLIGHTS:
 	* VCPs has been added into GraphX making edge endpoint fixation(binding) possible. By default GraphX automaticaly calculates edge endpoint position relative to vertex dimensions 
 	   and approximate math shape, but with this feature on you'll be able to bind edge endpoint to a separate customizable object. This will allow you to create static edge fixation
 	   endpoints on the vertex and give you full control over edge endpoints positioning.
-	* Now you can easily customize edge pointers with the help of EdgePointerImage and EdgePointerPath classes. Changes include more precious edge endpoint calculations so the edge
-	   will overlap with the edge pointer no more. According to this changes the old logic that utilizes direct Path object in EdgeControl template will be removed in GraphX 2.2.0
+	* Now you can easily customize edge pointers with the help of DefaultEdgePointer class which can host any content including Image/Path and supports rotation. Changes include more 
+	   precious edge endpoint calculations so the edge will overlap with the edge pointer no more. Because of these changes the old logic that utilizes direct Path object in EdgeControl 
+	   template will be removed completely in favor of notable performance improvements.
 	* Now GraphX for WPF requires only .NET Framework 4.0 to build & run. Deprecated all code that required .NET 4.0.3.
+	* Now you can use "http://schemas.panthernet.ru/graphx/" XAML namespace in GraphX for WPF for all its visual content. Additionaly, output filenames for WPF/METRO dlls are both changed to 
+		GraphX.Controls.dll so Post-Build process copies output files to GraphX/Bin folder with distinct filenames reflecting the platform as before.
+	* Performance improvements are always welcome. In this release the whole layout calculation logic has been revisited in terms of both performance and code quality gains. We've also eliminated
+		some redundant layout updates, moved all math & algorithms handling from GraphArea directly to LogicCore under better async implementation, cleaned up ZoomControl logic,
+		revisited edges & edge labels code to remove redundant calculation passes.
 
 DETAILED CHANGELOG:
 + Added support for custom VCP [WPF, METRO]
-	* New control class added: StaticVertexConnectionPoint
-	* VCP support the same math shapes as VertexShape property or can use VertexShape::None value to disable roundtrip calculations
+	* New control class added: StaticVertexConnectionPoint. It represents ContentControl which can host virtualy any valid object
+	* VCP support the same math shapes as VertexShape property or can use VertexShape::None value to disable roundtrip calculations	
 + Added vertex and edge skip processing support to METRO version (VAESPS) [METRO]
 + Added VAESPS for following algorithms: Circular [ALL]
 + Added VertexShape::None enum option, currently affecting only VCP logic [ALL]
 + Added different layout options to EfficientSugiyama algorithm using new Direction param [ALL]
 + Added true orthogonal edge routing for EfficientSugiyama algorithm using EdgeRouting param [ALL]
++ Added new property GraphArea::ControlsDrawOrder which defines vertex or edges should be drawn topmost [WPF, METRO]
++ Added GraphArea::PreloadGraph() method for manual graph rendering which generate vertices and edges from GraphArea::LogicCore.Graph property 
+	w/o any algorithms and also sets custom vertices positions if needed [WPF, METRO]
++ Added new EdgeControl template PART (PART_SelfLoopedEdge) for custom self looped edge indicator visualization. It represents FrameworkElement and if specified in the template
+	will be positioned in the top left vertex corner. Also made indicator settings more flexible by implementing some dependency props [WPF, METRO]
++ Added StateStorage::SaveOrUpdateState() method for easier use [WPF,METRO]
++ Added new readonly property EdgeControl::IsParallel that identifies edge as currently parallel to other edge. Made GraphArea::ParalellizeEdges() method public to be able to refresh IsParallel property on manual graph operations [METRO, WPF]
++ Added EdgeLabelControl::FlipOnRotation dependency property which controls if label should be flipped when axis is changed while rotating [WPF, METRO]
++ Fixed parallel edges labels handling. Now edge labels are more readable when there are two of them [WPF, METRO]
++ Fixed edge routing when graph state has been loaded. Graph state now stores AlgorithmStorage too [ALL]
++ Fixed ZoomControl zoom out to the value equal to zoom in resulting in similar smooth zoom [WPF, METRO]
++ Fixed ZoomControl::Zoom cproperty change not firing [WPF, METRO]
++ Fixed manual graph composition routines in case of ER algorithm is set [ALL]
++ Fixed first time solution rebuild problems by referencing new QuickGraphPCL nuget [ALL] 
 + Fixed layout algorithm calculations to always receive actual vertex positions as input parameter
 	This will fix VAESPS for default algorithms. [WPF, METRO]
 + Fixed edge pointer positioning bug [METRO]
-+ Fixed outdated edge rendering in some cases when vertex coordinates are changed manualy [WPF, METRO]
-+ Fixed edge overlapping edge pointers (image, path) [WPF, METRO]
++ Fixed redundant edge rendering in some cases when vertex coordinates are changed manualy [WPF, METRO]
++ Fixed edge overlapping edge pointers [WPF, METRO]
 + Fixed use of ControlFactory for edge deserialization [WPF, METRO] thanks to perturbare
 + Fixed some algorithm calculation problems, especial FR [ALL]
 + Fixed EdgeControl.ShowArrows to implement DependencyProperty [WPF, METRO]  thanks to perturbare
 + Fixed minor performance problems in ZoomControl [METRO]
++ Fixed and enhanced automatic data object Id resolve logic [WPF,METRO] thanks to perturbare
++ Fixed ZoomControl zoom sometimes not firing from code call after control is loaded [WPF]
++ Fixed VB sample project dependencies and refactored code a bit
++ Fixed Fade Move animation logic to report OnCompleted event correctly [WPF]
++ Made EdgeControlBase::UpdateEdge() method public. It can be used now to fully update edge visual on custom edge-related modifications [WPF, METRO]
++ Improved main layout calculation logic to gain performance improvements [WPF, METRO]
++ Reorganized Example apps namespaces and code for greater good :)
++ Merged EdgePointerImage and EdgePointerPath into one universal DefaultEdgePointer class [WPF, METRO]
++ Improved edge and its template parts rendering/calc performance [WPF, METRO]
++ Enhanced edge labels logic so now it don't require additional template bindings and modifications (Angle or RenderTransform) [WPF]
++ GraphArea::PreloadVertexes() now accepts graph param as optional (null by default) and uses LogicCore.Graph in that case [WPF, METRO]
 + Decoupled serialization logic from GraphX completely [ALL]  thanks to perturbare
 + Adjusted FR and BoundedFR default values for random initial positions [All]
 + Now GraphX for WPF requires only .NET Framework 4.0 to build & run [WPF]
@@ -36,20 +78,36 @@ DETAILED CHANGELOG:
 
 BREAKING CHANGES:
 * !!!WARNING!!! This GraphX version has fallen under the heavy hand of code refactoring and along with the numerous code improvements 
-	almost ALL of the namespaces has been changed to better reflect PCL and multiplatform library versioning. Also i've get rid of the
-    several different XAML xmlns usings in favor of single one that reflects library platform. I'm very sorry that this changes will
-	force you to update your GraphX projects but i realy felt that i must do it once and for all. Hope there will be no more
-	such heavy changes in that direction.
+	almost ALL of the namespaces has been changed to better reflect logical code grouping and ease additional platform support through code reusability. 
+	Also i've get rid of the several different XAML xmlns usings in favor of single one. I'm very sorry that this changes will force you to update your 
+	GraphX projects but i realy felt that i must do it once and for all. You will have to change most of the usings in code and XAML templates: i strongly
+    recommend you to use Resharper or any other code quality tool which will help to do this in minutes (or even seconds).
+
 	Core changes:
-	- All controls, behaviours and their interfaces are moved to GraphX.WPF.Controls and GraphX.METRO.Controls namespace
+	- All controls, behaviours and their interfaces are moved to GraphX.Controls namespace
 	- All algorithms are spreaded across GraphX.PCL.Logic.Algorithms namespace with additional OverlapRemoval, LayoutAlgorithms, EdgeRouting endings
 	- All base models and interfaces are now in GraphX.PCL.Common.Models namespace
 	- All GraphX primitives (Point, Rect, etc.) are left in GraphX.Measure for better code readability in cases when they are intersected with System.Windows namespace twins
 
 * IGXLogicCore now include ExternalLayoutAlgorithm, ExternalOverlapRemovalAlgorithm, ExternalEdgeRoutingAlgorithm for simplier external algo assignment
-
 * Now GraphX for WPF requires only .NET Framework 4.0 to build & run
-
+* EdgeLabelControl no longer needs default Angle binding and RenderTransformOrigin setup. They are processed internally [WPF]
+* GraphArea::GenerateGraph() method now has generateAllEdges param True by default.
+* Renamed following peoperties, moved them to EdgeControlBase and implemented them as DependencyProperty:
+	* LogicCore::EdgeSelfLoopCircleOffset -> SelfLoopIndicatorOffset
+	* LogicCore::EdgeSelfLoopCircleRadius -> SelfLoopIndicatorRadius
+	* LogicCore::EdgeShowSelfLooped -> ShowSelfLoopIndicator
+* Renamed following ZoomControl properties:
+	* ZoomDeltaMultiplier -> ZoomSensitivity
+	* MaxZoomDelta -> MaximumZoomStep
+* Completely deprecated EdgeControl::PART_edgeArrowPath template PART in favor of the new DefaultEdgePointer (PART_EdgePointerForSource & PART_EdgePointerForTarget). 
+	Please renew your custom templates. You can find an example in Generic.XAML template.
+* Self looped edges display logic has been slightly changed with the introduction of custom template PART (PART_SelfLoopedEdge). Now LogicCore::SelfLoopIndicatorOffset
+is (0,0) by default and indicator is shown in the top left vertex corner minus indicator size. You can change this behavior by overriding EdgeControl::PrepareSelfLoopedEdge() method.
+* GetVertexSizeRectangles() method moved from GraphArea to LogicCore.
+* Edge labels placement logic has been slightly changed when they are applied to parallel edges. Labels offset now translates them into different directions, for ex. one up, one down, one up.. etc. 
+	This behavior helps to better place labels for double parallels. Also parallel edge labels now are not flipped when axis changes during label rotation. If you're uncomfortable with these changes, 
+	please let me know!
 
 RELEASE 2.1.8
 + Added basic support for Image based edge pointers. Introduced new object for EdgeControl template: [WPF, METRO(bugged)]
@@ -81,7 +139,7 @@ RELEASE 2.1.8
 !Breaking changes
 + Renamed and changed to Enum - ZoomControl::UseAbsoluteZoomOnMouseWheel to MouseWheelZoomingMode [METRO, WPF]
 + Expanded EdgeControl event args with mouse and keyboard modifiers [WPF]
-+ Moved all WPF interfaces to GraphX.Controls.Models.Interfaces namespace and all METRO interfaces to GraphX.METRO.Controls.Models.Interfaces [WPF, METRO]
++ Moved all WPF interfaces to GraphX.Controls.Models.Interfaces namespace and all METRO interfaces to GraphX.Controls.Models.Interfaces [WPF, METRO]
 + Edge rotation now needs additional modification for all custom EdgeLabelControl templates. Please add: <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />[WPF, METRO]
 + Due to new calc cancelation feature the following has been changed:
 	- IExternalEdgeRouting, IExternalLayout, IExternalOverlapRemoval interfaces and different algorithm base classes now implement Compute(CancellationToken cancellationToken) method with an additional param
@@ -145,7 +203,6 @@ RELEASE 2.1.3 WIP
 + Redesigned libraries for PCL implementation
 	This shouldn't lead to major problems but some breaks will definetly occur:
 	- All routines in Logic library now operates with custom System.Windows types (platform-specific libraries operates (externaly) with System.Windows types). This includes any custom algorithms. 
-	- GraphX.Controls assembly was renamed to GraphX.WPF.Controls assembly
 	- DataSaveModel class renamed to GraphSerializationData 
 	- Althought file operations such as Save/load layout remains the same for the end user the background logic of this features has been changed:
 		- Implemented IFileServiceProvider interface and corresponding property in GXLogicCore class
@@ -173,7 +230,7 @@ PCL-IMPROVEMENTS
 - Added YAXLib v2.13 project sources splitted into 2 different projects: main and PCL compliant (for attributes to be availbale in PCL libraries)
 - Implemented PCL version of GraphX.Common
 - Implemented PCL version of GraphX.Logic
-- Implemented GraphX.WPF.Controls platform-specific library
+- Implemented GraphX.Controls platform-specific library
 
 
 RELEASE 2.0.2

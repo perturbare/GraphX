@@ -5,12 +5,12 @@ using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using GraphX.METRO.Controls.Animations;
-using GraphX.METRO.Controls.Models;
+using GraphX.Controls.Animations;
+using GraphX.Controls.Models;
 using GraphX.PCL.Common.Enums;
 using GraphX.PCL.Common.Interfaces;
 
-namespace GraphX.METRO.Controls
+namespace GraphX.Controls
 {
     public abstract class GraphAreaBase : Canvas, ITrackableContent
     {
@@ -32,7 +32,7 @@ namespace GraphX.METRO.Controls
             DependencyProperty.Register("LogicCoreChangeAction", typeof(LogicCoreChangedAction), typeof(GraphAreaBase), new PropertyMetadata(LogicCoreChangedAction.None));
 
 
-        public GraphAreaBase()
+        protected GraphAreaBase()
         {
             AutoAssignMissingDataId = true;
             LogicCoreChangeAction = LogicCoreChangedAction.None;
@@ -46,9 +46,6 @@ namespace GraphX.METRO.Controls
         private static void x_changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             d.SetValue(LeftProperty, e.NewValue);
-            /*var vc = d as IPositionChangeNotify;
-            if(vc != null)
-                vc.OnPositionChanged();*/
         }
 
         public static readonly DependencyProperty FinalXProperty =
@@ -67,10 +64,6 @@ namespace GraphX.METRO.Controls
         private static void y_changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             d.SetValue(TopProperty, e.NewValue);
-            /*var vc = d as IPositionChangeNotify;
-            if (vc != null)
-                vc.OnPositionChanged();*/
-            
         }
 
         public static double GetX(DependencyObject obj)
@@ -397,10 +390,7 @@ namespace GraphX.METRO.Controls
 
         /* INTERNAL VARIABLES FOR CONTROLS INTEROPERABILITY */
         internal abstract bool IsEdgeRoutingEnabled { get; }
-        internal abstract double EdgeSelfLoopCircleRadius { get; }
-        internal abstract bool EdgeShowSelfLooped { get; }
         internal abstract bool EnableParallelEdges { get; }
-        internal abstract Point EdgeSelfLoopCircleOffset { get; }
         internal abstract bool EdgeCurvingEnabled { get; }
         internal abstract double EdgeCurvingTolerance { get; }
 
@@ -481,7 +471,8 @@ namespace GraphX.METRO.Controls
                     {
                         x = 0;
                         y = 0;
-                    }else continue;
+                    }
+                    else continue;
 
                     if (COUNT_ROUTE_PATHS && ec != null)
                     {

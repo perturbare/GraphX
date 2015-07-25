@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:ctrls="using:GraphX.METRO.Controls"
+    xmlns:ctrls="using:GraphX.Controls"
 	xmlns:local="using:GraphX">
 
     <!-- REGION ZoomControl -->
@@ -78,10 +78,10 @@
                         <Border Background="Gray" BorderBrush="White" BorderThickness="4" CornerRadius="5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="5" Opacity=".8">
                             <StackPanel Orientation="Vertical">
                                 <Button x:Name="FillButton" IsTabStop="False" Margin="5" Height="64" Width="64" Style="{StaticResource TransparentButton}" Command="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=ZoomToFillCommand}" >
-                                    <Image Stretch="Fill" Source="GraphX.METRO.Controls/Images/round2.png" ToolTipService.ToolTip="Zoom to fill" />
+                                    <Image Stretch="Fill" Source="GraphX.Controls/Images/round2.png" ToolTipService.ToolTip="Zoom to fill" />
                                 </Button>
                                 <Button x:Name="CenterButton" IsTabStop="False" Margin="5" Height="64" Width="64" Style="{StaticResource TransparentButton}"  Command="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=CenterToContentCommand}" >
-                                    <Image Stretch="Fill" Source="GraphX.METRO.Controls/Images/round1.png" ToolTipService.ToolTip="Center content" />
+                                    <Image Stretch="Fill" Source="GraphX.Controls/Images/round1.png" ToolTipService.ToolTip="Center content" />
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -147,10 +147,16 @@
                         <Path Stroke="{TemplateBinding Foreground}"
                           StrokeThickness="2" MinWidth="1" MinHeight="1"
                             x:Name="PART_edgePath"/>
-                        <Path Stroke="{TemplateBinding Foreground}"
-                          StrokeThickness="2" MinWidth="1" MinHeight="1" 
-                            x:Name="PART_edgeArrowPath" />
+                        <ctrls:DefaultEdgePointer NeedRotation="true" x:Name="PART_EdgePointerForTarget" >
+                            <Path Data="M0,0.5 L1,1 1,0" Fill="Black" Stretch="Uniform" Width="10" Height="10"/>
+                        </ctrls:DefaultEdgePointer>
                         <ctrls:EdgeLabelControl x:Name="PART_edgeLabel" Content="{Binding Edge.Text, RelativeSource={RelativeSource TemplatedParent}}" />
+                        <Path x:Name="PART_SelfLoopedEdge"
+                              Width="10" 
+                              Height="10" 
+                              Stretch="Uniform" 
+                              Fill="{TemplateBinding Foreground}" 
+                              Data="F1 M 17.4167,32.25L 32.9107,32.25L 38,18L 43.0893,32.25L 58.5833,32.25L 45.6798,41.4944L 51.4583,56L 38,48.0833L 26.125,56L 30.5979,41.7104L 17.4167,32.25 Z "/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
@@ -184,7 +190,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
     </Style>
 
     <!--VERTEX LABEL CONTROL -->

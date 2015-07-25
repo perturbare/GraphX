@@ -6,11 +6,15 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
-using GraphX.METRO.Controls.Animations;
-using GraphX.METRO.Controls.Models;
+using GraphX.Controls;
+using GraphX.Controls.Animations;
+using GraphX.Controls.Models;
 using GraphX.PCL.Common.Enums;
 using GraphX.PCL.Logic.Algorithms.LayoutAlgorithms;
 using GraphX.PCL.Logic.Algorithms.OverlapRemoval;
+using METRO.SimpleGraph.Models;
+using QuickGraph.Graphviz.Dot;
+
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace METRO.SimpleGraph
@@ -41,6 +45,7 @@ namespace METRO.SimpleGraph
             graph.GenerateGraphFinished += OnFinishedLayout;
             graph.RelayoutFinished += OnFinishedLayout;
             graph.AlignAllEdgesLabels();
+            graph.ControlsDrawOrder = ControlDrawOrder.VerticesOnTop;
             Loaded += MainPage_Loaded;
         }
 
@@ -52,10 +57,9 @@ namespace METRO.SimpleGraph
         private async void butGenerate_Click(object sender, RoutedEventArgs e)
         {
             GraphAreaExample_Setup();
-
             try
             {
-                await graph.GenerateGraphAsync(true);
+                await graph.GenerateGraphAsync();
             }
             catch (OperationCanceledException)
             {
@@ -67,9 +71,7 @@ namespace METRO.SimpleGraph
         {
             try
             {
-                var t0 = DateTime.Now;
                 await graph.RelayoutGraphAsync();
-                Debug.WriteLine("Time elapsed: {0}", DateTime.Now - t0);
             }
             catch (OperationCanceledException)
             {
@@ -109,7 +111,7 @@ namespace METRO.SimpleGraph
 
             try
             {
-                await graph.GenerateGraphAsync(true);
+                await graph.GenerateGraphAsync();
             }
             catch (OperationCanceledException)
             {
@@ -172,6 +174,8 @@ namespace METRO.SimpleGraph
                     }
                     vlist = dataGraph.Vertices.ToList();
                     AddEdge(dataGraph, 0, 1, vlist);
+                    AddEdge(dataGraph, 0, 0, vlist);
+
                     AddEdge(dataGraph, 0, 2, vlist);
                     AddEdge(dataGraph, 1, 3, vlist);
                     AddEdge(dataGraph, 1, 4, vlist);
@@ -272,23 +276,7 @@ namespace METRO.SimpleGraph
         {
 
             var logicCore = graph.GetLogicCore<GXLogicCoreExample>();
-            var dataGraph = GraphExample_Setup();
-            logicCore.Graph = dataGraph;
-
-
-            /*LogicCore.DefaultLayoutAlgorithmParams = LogicCore.AlgorithmFactory.CreateLayoutParameters(GraphX.LayoutAlgorithmTypeEnum.KK);
-            ((KKLayoutParameters)LogicCore.DefaultLayoutAlgorithmParams).MaxIterations = 100;
-            cboxOverlap.SelectedItem = OverlapRemovalAlgorithmTypeEnum.FSA;
-
-            cboxEdgeRouting.SelectedItem = EdgeRoutingAlgorithmTypeEnum.SimpleER;
-            LogicCore.AsyncAlgorithmCompute = false;
-
-            graph.SetVerticesHighlight(true, GraphControlType.VertexAndEdge, EdgesType.All);
-            graph.SetEdgesHighlight(true, GraphControlType.VertexAndEdge);
-
-
-
-            */
+            logicCore.Graph = GraphExample_Setup();
 
             switch ((LayoutAlgorithmTypeEnum) cboxLayout.SelectedItem)
             {
@@ -320,13 +308,6 @@ namespace METRO.SimpleGraph
             graph.SetVerticesMathShape(VertexShape.Circle);
             graph.ShowAllVerticesLabels();
             graph.ShowAllEdgesLabels();
-
-
-            //graph.MouseOverAnimation = AnimationFactory.CreateMouseOverAnimation(MouseOverAnimation.Scale);
-
-            /*cboxLayout_SelectionChanged(null, null);
-            cboxOverlap_SelectionChanged(null, null);
-            cboxEdgeRouting_SelectionChanged(null, null);*/
         }
 
         void MoveAnimation_Completed(object sender, EventArgs e)

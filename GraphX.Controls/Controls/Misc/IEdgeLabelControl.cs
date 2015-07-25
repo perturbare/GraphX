@@ -1,7 +1,11 @@
 ﻿using System;
+#if WPF
 using System.Windows;
+#elif METRO
+using Windows.Foundation;
+#endif
 
-namespace GraphX.WPF.Controls
+namespace GraphX.Controls
 {
     public interface IEdgeLabelControl: IDisposable
     {
@@ -27,6 +31,7 @@ namespace GraphX.WPF.Controls
         /// <summary>
         /// Set label rectangular size
         /// </summary>
+
         void SetSize(Rect size);
     }
 }

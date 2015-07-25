@@ -1,6 +1,10 @@
-﻿using System.Windows;
+﻿# if WPF
+using System.Windows;
+#elif METRO
+using Windows.UI.Xaml;
+#endif
 
-namespace GraphX.WPF.Controls.Models
+namespace GraphX.Controls.Models
 {
     public interface IGraphControlFactory
     {

@@ -14,15 +14,14 @@ using GraphX.PCL.Common.Enums;
 using GraphX.PCL.Common.Exceptions;
 using GraphX.PCL.Common.Interfaces;
 using GraphX.PCL.Common.Models;
-using GraphX.WPF.Controls.DesignerExampleData;
-using GraphX.WPF.Controls.Models;
+using GraphX.Controls.Models;
 using Microsoft.Win32;
 using QuickGraph;
 using Point = System.Windows.Point;
 using Rect = GraphX.Measure.Rect;
 using Size = GraphX.Measure.Size;
 
-namespace GraphX.WPF.Controls
+namespace GraphX.Controls
 {
     public class GraphArea<TVertex, TEdge, TGraph>  : GraphAreaBase, IDisposable
         where TVertex : class, IGraphXVertex
@@ -33,6 +32,10 @@ namespace GraphX.WPF.Controls
 
         #region My properties
 
+        /// <summary>
+        /// Gets or sets in which order GraphX controls are drawn
+        /// </summary>
+        public ControlDrawOrder ControlsDrawOrder { get; set; }
 
         public static readonly DependencyProperty LogicCoreProperty =
             DependencyProperty.Register("LogicCore", typeof(IGXLogicCore<TVertex, TEdge, TGraph>), typeof(GraphArea<TVertex, TEdge, TGraph>), new UIPropertyMetadata(null, logic_core_changed));
@@ -104,21 +107,9 @@ namespace GraphX.WPF.Controls
         /// </summary>
         internal override bool IsEdgeRoutingEnabled { get { return LogicCore != null && LogicCore.IsEdgeRoutingEnabled; } }
         /// <summary>
-        /// Link to LogicCore. Gets self looped edge radius.
-        /// </summary>
-        internal override double EdgeSelfLoopCircleRadius { get { return LogicCore == null ? 0 : LogicCore.EdgeSelfLoopCircleRadius; } }
-        /// <summary>
-        /// Link to LogicCore. Gets if self looped edges are enabled.
-        /// </summary>
-        internal override bool EdgeShowSelfLooped { get { return LogicCore != null && LogicCore.EdgeShowSelfLooped; } }
-        /// <summary>
         /// Link to LogicCore. Gets if parallel edges are enabled.
         /// </summary>
         internal override bool EnableParallelEdges { get { return LogicCore != null && LogicCore.EnableParallelEdges; } }
-        /// <summary>
-        /// Link to LogicCore. Gets looped edge offset.
-        /// </summary>
-        internal override Point EdgeSelfLoopCircleOffset { get { return LogicCore == null ? new Point() : LogicCore.EdgeSelfLoopCircleOffset.ToWindows(); } }
         /// <summary>
         /// Link to LogicCore. Gets if edge curving is used.
         /// </summary>
@@ -195,9 +186,6 @@ namespace GraphX.WPF.Controls
 
         public GraphArea()
         {
-            _uiTaskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-
-            ControlFactory = new GraphControlFactory(this);
             EnableVisualPropsRecovery = true;
             EnableVisualPropsApply = true;
             //CacheMode = new BitmapCache(2) { EnableClearType = false, SnapsToDevicePixels = true };
@@ -206,11 +194,13 @@ namespace GraphX.WPF.Controls
 
             if (!DesignerProperties.GetIsInDesignMode(this))
             {
+                ControlFactory = new GraphControlFactory(this);
                 StateStorage = new StateStorage<TVertex, TEdge, TGraph>(this);
+                _uiTaskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             } 
             else
             {                
-                Width = DesignSize.Width;
+            /*    Width = DesignSize.Width;
                 Height = DesignSize.Height;
                 var vc = new VertexDataExample(1, "Vertex 1");
                 var ctrl = ControlFactory.CreateVertexControl(vc);
@@ -241,7 +231,7 @@ namespace GraphX.WPF.Controls
 
                 base.Children.Add(ctrl);
                 base.Children.Add(ctrl2);
-                base.Children.Add(ctrl3);
+                base.Children.Add(ctrl3);*/
             }
             #endregion
         }
@@ -418,7 +408,9 @@ namespace GraphX.WPF.Controls
             _edgeslist.Add(edgeData, edgeControl);
             try
             {
-                base.Children.Insert(num, edgeControl);
+                if (ControlsDrawOrder == ControlDrawOrder.VerticesOnTop || num != 0)
+                    base.Children.Insert(num, edgeControl);
+                else base.Children.Add(edgeControl);
             }
             catch (Exception ex)
             {
@@ -483,31 +475,6 @@ namespace GraphX.WPF.Controls
         }
 
         /// <summary>
-        /// Get visual vertex size rectangles (can be used by some algorithms)
-        /// </summary>
-        /// <param name="positions">Vertex positions collection (auto filled if null)</param>
-        /// <param name="vertexSizes">Vertex sizes collection (auto filled if null)</param>
-        /// <param name="getCenterPoints">True if you want center points returned instead of top-left (needed by overlap removal algo)</param>
-        public Dictionary<TVertex, Rect> GetVertexSizeRectangles(IDictionary<TVertex, Measure.Point> positions = null, Dictionary<TVertex, Size> vertexSizes = null, bool getCenterPoints = false)
-        {
-            if (LogicCore == null)
-                throw new GX_InvalidDataException("LogicCore -> Not initialized!");
-
-            if (vertexSizes == null) vertexSizes = GetVertexSizes();
-            if (positions == null) positions = GetVertexPositions();
-            var rectangles = new Dictionary<TVertex, Rect>();
-            foreach (var vertex in LogicCore.Graph.Vertices.Where(a => a.SkipProcessing != ProcessingOptionEnum.Exclude))
-            {
-                Measure.Point position; Size size;
-                if (!positions.TryGetValue(vertex, out position) || !vertexSizes.TryGetValue(vertex, out size)) continue;
-                if (!getCenterPoints) rectangles[vertex] = new Rect(position.X, position.Y, size.Width, size.Height);
-                else rectangles[vertex] = new Rect(position.X - size.Width * (float)0.5, position.Y - size.Height * (float)0.5, size.Width, size.Height);
-            
-            }
-            return rectangles;
-        }
-
-        /// <summary>
         /// Returns all vertices positions list
         /// </summary>
         public Dictionary<TVertex, Measure.Point> GetVertexPositions()
@@ -520,16 +487,54 @@ namespace GraphX.WPF.Controls
         #region PreloadVertexes()
 
         /// <summary>
-        /// Preloads vertex controls from specified graph. All vertices are created hidden by default.
-        /// This method can be used for custom external algorithm implementations or manual visual graph population.
+        /// For manual graph generation only!
+        /// Generates visual objects for all vertices and edges w/o any algorithms. Objects are hidden by default. Optionaly, sets vertex coordinates.
+        /// If there is any edge routing algorithm needed then it should be set before the call to this method.
         /// </summary>
-        /// <param name="graph">Data graph</param>
-        /// <param name="dataContextToDataItem">Sets DataContext property to vertex data item of the control</param>
-        /// <param name="forceVisPropRecovery"></param>
-        public void PreloadVertexes(TGraph graph, bool dataContextToDataItem = true, bool forceVisPropRecovery = false)
+        /// <param name="positions">Optional vertex positions</param>
+        /// <param name="showObjectsIfPosSpecified">If True, all objects will be made visible when positions are specified</param>
+        /// <param name="autoresolveIds">Automaticaly assign unique Ids to data objects. Can be vital for different GraphX logic parts such as parallel edges.</param>
+        public void PreloadGraph(Dictionary<TVertex, Point> positions = null, bool showObjectsIfPosSpecified = true, bool autoresolveIds = true)
         {
             if (LogicCore == null)
                 throw new GX_InvalidDataException("LogicCore -> Not initialized!");
+            if (LogicCore.Graph == null)
+                throw new GX_InvalidDataException("LogicCore.Graph -> Not initialized!");
+
+            if(autoresolveIds)
+                AutoresolveIds();
+
+            PreloadVertexes();
+
+            if(positions != null)
+            {
+                foreach (var item in positions)
+                {
+                    if (VertexList.ContainsKey(item.Key))
+                        VertexList[item.Key].SetPosition(item.Value);
+                    if(showObjectsIfPosSpecified)
+                        VertexList[item.Key].Visibility = Visibility.Visible;
+                }
+            }
+            UpdateLayout();
+            RestoreAlgorithmStorage();
+            GenerateAllEdges(positions != null ? Visibility.Visible : Visibility.Collapsed);
+        }
+
+        /// <summary>
+        /// Clears all visual objects and generates VertexControl objects from specified graph. All vertices are created hidden by default.
+        /// This method can be used for custom external algorithm implementations or manual visual graph population.
+        /// </summary>
+        /// <param name="graph">Data graph, by default is null and uses LogicCore.Graph as the source</param>
+        /// <param name="dataContextToDataItem">Sets DataContext property to vertex data item of the control</param>
+        /// <param name="forceVisPropRecovery"></param>
+        public void PreloadVertexes(TGraph graph = null, bool dataContextToDataItem = true, bool forceVisPropRecovery = false)
+        {
+            if (LogicCore == null)
+                throw new GX_InvalidDataException("LogicCore -> Not initialized!");
+            if (graph == null && LogicCore.Graph == null)
+                throw new GX_InvalidDataException("graph param empty and LogicCore.Graph -> Not initialized!");
+            graph = graph ?? LogicCore.Graph;
             //clear edge and vertex controls
             RemoveAllVertices();
             RemoveAllEdges();
@@ -550,7 +555,7 @@ namespace GraphX.WPF.Controls
         #endregion
 
         #region RelayoutGraph()
-        private Task _layoutTask = null;
+        private Task _layoutTask;
         private CancellationTokenSource _layoutCancellationSource; 
 
         private enum Event
@@ -563,75 +568,31 @@ namespace GraphX.WPF.Controls
         private void _relayoutGraph(CancellationToken cancellationToken)
         {
             Dictionary<TVertex, Size> vertexSizes = null;
-            IExternalLayout<TVertex> alg = null; //layout algorithm
-            Dictionary<TVertex, Rect> rectangles = null; //rectangled size data
-            IExternalOverlapRemoval<TVertex> overlap = null;//overlap removal algorithm
-            IExternalEdgeRouting<TVertex, TEdge> eralg = null;
             IDictionary<TVertex, Measure.Point> vertexPositions = null;
+            IGXLogicCore<TVertex, TEdge, TGraph> localLogicCore = null;
 
-            if(!RunOnDispatcherThread(() =>
+            RunOnDispatcherThread(() =>
             {
-                if (LogicCore == null)
-                    throw new GX_InvalidDataException("LogicCore -> Not initialized!");
-                if(LogicCore.Graph == null)
-                    throw new GX_InvalidDataException("LogicCore -> Graph property not set!");
-                if (_vertexlist.Count == 0) return false; // no vertexes == no edges
+                if (LogicCore == null) return;
 
                 UpdateLayout(); //update layout so we can get actual control sizes
 
                 if (LogicCore.AreVertexSizesNeeded())
                     vertexSizes = GetVertexSizesAndPositions(out vertexPositions);
                 else vertexPositions = GetVertexPositions();
-
-                alg = LogicCore.GenerateLayoutAlgorithm(vertexSizes, vertexPositions);
-                if (alg == null && !LogicCore.IsCustomLayout)
-                {
-                    MessageBox.Show("Layout type not supported yet!");
-                    return false;
-                }
-
-                //setup overlap removal algorythm
-                if (LogicCore.AreOverlapNeeded())
-                    overlap = LogicCore.GenerateOverlapRemovalAlgorithm(rectangles);
-
-                //setup Edge Routing algorithm
-                eralg = LogicCore.GenerateEdgeRoutingAlgorithm(DesiredSize.ToGraphX());
-                return alg != null || LogicCore.IsCustomLayout;
-            })) return;
+                localLogicCore = LogicCore;
+            });
             
+            if(localLogicCore == null)
+                throw new GX_InvalidDataException("LogicCore -> Not initialized!");
 
-            IDictionary<TVertex, Measure.Point> resultCoords;
-            if (alg != null)
-            {
-                alg.Compute(cancellationToken);
-                ReportProgress(33, Event.LayoutCalculationFinished);
-                //result data storage
-                resultCoords = alg.VertexPositions;
-            }//get default coordinates if using Custom layout
-            else
-            {
-                //UpdateLayout();
-                resultCoords = vertexPositions;
-            }
+            if (!localLogicCore.GenerateAlgorithmStorage(vertexSizes, vertexPositions))
+                return;
 
-            //overlap removal
-            if (overlap != null)
-            {
-                //generate rectangle data from sizes
-                var coords = resultCoords;
-                RunOnDispatcherThread(() => { rectangles = GetVertexSizeRectangles(coords, vertexSizes, true); });
-                overlap.Rectangles = rectangles;
-                overlap.Compute(cancellationToken);
-                resultCoords = new Dictionary<TVertex, Measure.Point>();
-                foreach (var res in overlap.Rectangles)
-                    resultCoords.Add(res.Key, new Measure.Point(res.Value.Left, res.Value.Top));
-                ReportProgress(66, Event.OverlapRemovalCalculationFinished);
-            }
-            
+            var resultCoords = localLogicCore.Compute(cancellationToken);
+
             RunOnDispatcherThread(() =>
             {
-                LogicCore.CreateNewAlgorithmStorage(alg, overlap, eralg);
-
                 if (MoveAnimation != null)
                 {
                     MoveAnimation.CleanupBaseData();
@@ -661,40 +622,10 @@ namespace GraphX.WPF.Controls
                     if (MoveAnimation.EdgeStorage.Count > 0)
                         MoveAnimation.RunEdgeAnimation();
                 }
-                UpdateLayout(); //need to update before edge routing
+
+                SetCurrentValue(LogicCoreProperty, localLogicCore);
+                UpdateLayout(); //update all changes
             });
-
-            //Edge Routing
-            var algEr = alg as ILayoutEdgeRouting<TEdge>;
-            if (eralg != null && (algEr == null || algEr.EdgeRoutes == null || !algEr.EdgeRoutes.Any()))
-            {
-                RunOnDispatcherThread(() =>
-                {
-                    //var size = Parent is ZoomControl ? (Parent as ZoomControl).Presenter.ContentSize : DesiredSize;
-                    eralg.AreaRectangle = ContentSize.ToGraphX();// new Rect(TopLeft.X, TopLeft.Y, size.Width, size.Height);
-                    rectangles = GetVertexSizeRectangles(resultCoords, vertexSizes);
-                });
-                eralg.VertexPositions = resultCoords;
-                eralg.VertexSizes = rectangles;
-                eralg.Compute(cancellationToken);
-                if (eralg.EdgeRoutes != null)
-                    foreach (var item in eralg.EdgeRoutes)
-                        item.Key.RoutingPoints = item.Value;
-
-                ReportProgress(99, Event.EdgeRoutingCalculationFinished);
-
-                RunOnDispatcherThread(() =>
-                {
-                    UpdateLayout();
-                    LogicCore.CreateNewAlgorithmStorage(alg, overlap, eralg);
-                });
-            }
-
-            if (algEr != null && algEr.EdgeRoutes != null)
-            {
-                foreach (var item in algEr.EdgeRoutes)
-                    item.Key.RoutingPoints = item.Value;
-            }
         }
 
         /// <summary>
@@ -871,7 +802,7 @@ namespace GraphX.WPF.Controls
         /// <param name="graph">Data graph</param>
         /// <param name="generateAllEdges">Generate all available edges for graph</param>
         /// <param name="dataContextToDataItem">Sets visual edge and vertex controls DataContext property to vertex data item of the control (Allows prop binding in xaml templates)</param>
-        public void GenerateGraph(TGraph graph, bool generateAllEdges = false, bool dataContextToDataItem = true)
+        public void GenerateGraph(TGraph graph, bool generateAllEdges = true, bool dataContextToDataItem = true)
         {
             if (AutoAssignMissingDataId)
                 AutoresolveIds(graph);
@@ -885,7 +816,7 @@ namespace GraphX.WPF.Controls
         /// </summary>
         /// <param name="generateAllEdges">Generate all available edges for graph</param>
         /// <param name="dataContextToDataItem">Sets visual edge and vertex controls DataContext property to vertex data item of the control (Allows prop binding in xaml templates)</param>
-        public void GenerateGraph(bool generateAllEdges = false, bool dataContextToDataItem = true)
+        public void GenerateGraph(bool generateAllEdges = true, bool dataContextToDataItem = true)
         {
             if (LogicCore == null)
                 throw new GX_InvalidDataException("LogicCore -> Not initialized! (Is NULL)");
@@ -1151,63 +1082,14 @@ namespace GraphX.WPF.Controls
             //this.InvalidateVisual();
 
             if (LogicCore.EnableParallelEdges)
-                ParallelizeEdges();
-            if (_svShowEdgeLabels == true && LogicCore.EnableEdgeLabelsOverlapRemoval)
-               RemoveEdgeLabelsOverlap();
+                UpdateParallelEdgesData();
+            /*if (_svShowEdgeLabels == true && LogicCore.EnableEdgeLabelsOverlapRemoval)
+               RemoveEdgeLabelsOverlap();*/
 
         }
 
         private void RemoveEdgeLabelsOverlap()
         {
-            var sz = GetVertexSizeRectangles();
-
-            var sizes = sz.ToDictionary(item => new LabelOverlapData() {Id = item.Key.ID, IsVertex = true}, item => item.Value);
-            foreach (var item in EdgesList)
-            {
-                item.Value.UpdateLabelLayout();
-                sizes.Add(new LabelOverlapData() { Id = item.Key.ID, IsVertex = false }, item.Value.GetLabelSize());
-            }
-  
-            var orAlgo = LogicCore.AlgorithmFactory.CreateFSAA(sizes, 15f, 15f);
-            orAlgo.Compute(CancellationToken.None);
-            foreach (var item in orAlgo.Rectangles)
-            {
-                if (item.Key.IsVertex)
-                {
-                    var vertex = VertexList.FirstOrDefault(a => a.Key.ID == item.Key.Id).Value;
-                    if (vertex == null) throw new GX_InvalidDataException("RemoveEdgeLabelsOverlap() -> Vertex not found!");
-                    vertex.SetPosition(item.Value.X + item.Value.Width * .5, item.Value.Y + item.Value.Height * .5);
-                    //vertex.Arrange(item.Value);
-                }
-                else
-                {
-                    var edge = EdgesList.FirstOrDefault(a => a.Key.ID == item.Key.Id).Value;
-                    if (edge == null) throw new GX_InvalidDataException("RemoveEdgeLabelsOverlap() -> Edge not found!");
-                    edge.SetCustomLabelSize(item.Value.ToWindows());
-                }
-            }
-            //recalculate route path for new vertex positions
-            if (LogicCore.AlgorithmStorage.EdgeRouting != null)
-            {
-                LogicCore.AlgorithmStorage.EdgeRouting.VertexSizes = GetVertexSizeRectangles();
-                LogicCore.AlgorithmStorage.EdgeRouting.VertexPositions = GetVertexPositions();
-                LogicCore.AlgorithmStorage.EdgeRouting.Compute(CancellationToken.None);
-                if (LogicCore.AlgorithmStorage.EdgeRouting.EdgeRoutes != null)
-                    foreach (var item in LogicCore.AlgorithmStorage.EdgeRouting.EdgeRoutes)
-                        item.Key.RoutingPoints = item.Value;
-            }
-            foreach (var item in EdgesList)
-            {
-                item.Value.PrepareEdgePath(false, null, false);
-            }
-            //update edges
-           // UpdateAllEdges();
-        }
-
-        private class LabelOverlapData
-        {
-            public bool IsVertex;
-            public int Id;
         }
 
         /// <summary>
@@ -1221,9 +1103,16 @@ namespace GraphX.WPF.Controls
             generateAllEdges(defaultVisibility);
         }
 
-        private void ParallelizeEdges()
+        /// <summary>
+        /// Update parallel edges information. Only needed to be run when edges has been added manualy and has to track parallel ones.
+        /// Essentialy refreshes EdgeControl::IsParallel property
+        /// </summary>
+        public void UpdateParallelEdgesData()
         {
             var usedIds = _edgeslist.Count > 20 ? new HashSet<int>() as ICollection<int> : new List<int>();
+
+            //clear IsParallel flag
+            EdgesList.Values.ForEach(a => a.IsParallel = false);
 
             foreach (var item in EdgesList)
             {
@@ -1263,22 +1152,20 @@ namespace GraphX.WPF.Controls
                     //leave first edge intact if we have not even edges count
                     for (int i = even ? 0 : 1; i < list.Count; i++)
                     {
-                        //var dist = ParallelEdgeDistance;
-                        //if (chet && i < 2) dist = distance;
-                        //if (cList[i] && ((!chet && !prevc) || list.Count == 2)) viceversa = !viceversa;
                         //if source to target edge
                         if (!cList[i])
                         {
-                            list[i].SourceOffset = (viceversa ? distance : -distance) * (1 + ((even ? i : i - 1) / 2));
-                            list[i].TargetOffset = -list[i].SourceOffset;
+                            list[i].ParallelEdgeOffset = (viceversa ? -distance : distance) * (1 + ((even ? i : i - 1) / 2));
+                            //list[i].TargetOffset = -list[i].ParallelEdgeOffset;
                         }
                         else //if target to source edge - just switch offsets
                         {
-                            list[i].TargetOffset = (viceversa ? distance : -distance) * (1 + ((even ? i : i - 1) / 2));
-                            list[i].SourceOffset = -list[i].TargetOffset;
+                            list[i].ParallelEdgeOffset = -((viceversa ? -distance : distance) * (1 + ((even ? i : i - 1) / 2)));
+                            //list[i].ParallelEdgeOffset = -list[i].TargetOffset;
                         }
                         //change trigger to opposite
                         viceversa = !viceversa;
+                        list[i].IsParallel = true;
                     }
                 }
 
@@ -1351,18 +1238,20 @@ namespace GraphX.WPF.Controls
         /// <summary>
         /// Update visual appearance for all possible visual edges
         /// </summary>
-        public void UpdateAllEdges()
+        /// <param name="performFullUpdate">If True - perform full edge update including all children checks such as pointers & labels. If False - update only edge routing and edge visual</param>
+        public void UpdateAllEdges(bool performFullUpdate = false)
         {
             if (LogicCore == null)
                 throw new GX_InvalidDataException("LogicCore -> Not initialized!");
+            
+            if (LogicCore.EnableParallelEdges)
+                UpdateParallelEdgesData();
+
             foreach (var ec in _edgeslist.Values)
             {
-                ec.PrepareEdgePath();
-                ec.InvalidateVisual();
-                ec.InvalidateChildren();
+                if (!performFullUpdate) ec.UpdateEdgeRendering();
+                else ec.UpdateEdge();
             }
-            if (LogicCore.EnableParallelEdges)
-                ParallelizeEdges();
         }
 
         
@@ -1520,15 +1409,9 @@ namespace GraphX.WPF.Controls
 
         private void RestoreAlgorithmStorage()
         {
-            //if (LogicCore.AlgorithmStorage.Layout == null)
-           // {
-                var vPositions = GetVertexPositions();
-                var vSizeRectangles = GetVertexSizeRectangles();
-                var lay = LogicCore.GenerateLayoutAlgorithm(GetVertexSizes(), GetVertexPositions());
-                var or = LogicCore.GenerateOverlapRemovalAlgorithm(vSizeRectangles);
-                var er = LogicCore.GenerateEdgeRoutingAlgorithm(DesiredSize.ToGraphX(), vPositions, vSizeRectangles);
-                LogicCore.CreateNewAlgorithmStorage(lay, or, er);
-           // }
+            IDictionary<TVertex, Measure.Point> vPositions;
+            var vSizes = GetVertexSizesAndPositions(out vPositions);            
+            LogicCore.GenerateAlgorithmStorage(vSizes, vPositions);
         }
 
         #endregion

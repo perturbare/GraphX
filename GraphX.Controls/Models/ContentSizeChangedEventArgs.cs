@@ -1,6 +1,10 @@
+#if WPF
 using System.Windows;
+#elif METRO
+using Windows.Foundation;
+#endif
 
-namespace GraphX.WPF.Controls.Models
+namespace GraphX.Controls.Models
 {
     public sealed class ContentSizeChangedEventArgs : System.EventArgs
     {

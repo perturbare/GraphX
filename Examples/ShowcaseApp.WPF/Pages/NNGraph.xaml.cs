@@ -6,8 +6,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using GraphX;
 using GraphX.PCL.Common.Enums;
-using GraphX.WPF.Controls;
-using GraphX.WPF.Controls.Models;
+using GraphX.Controls;
+using GraphX.Controls.Models;
 using ShowcaseApp.WPF.Models;
 
 namespace ShowcaseApp.WPF.Pages
@@ -55,7 +55,7 @@ namespace ShowcaseApp.WPF.Pages
             zoomCtrl.Zoom = 2;
             zoomCtrl.MinZoom = .5;
             zoomCtrl.MaxZoom = 50;
-            zoomCtrl.ZoomDeltaMultiplier = 25;
+            zoomCtrl.ZoomSensitivity = 25;
             zoomCtrl.MouseDown += zoomCtrl_MouseDown;
             var tb = new TextBlock() {Text = "AAAA"};
 

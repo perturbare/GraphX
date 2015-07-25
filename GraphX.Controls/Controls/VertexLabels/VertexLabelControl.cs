@@ -1,19 +1,52 @@
-﻿using System;
+﻿#if WPF
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using DefaultEventArgs = System.EventArgs;
+#elif METRO
+using Windows.ApplicationModel;
+using Windows.Foundation;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Media;
+using DefaultEventArgs = System.Object;
+#endif
+using System.Linq;
 using GraphX.PCL.Common.Exceptions;
 
-namespace GraphX.WPF.Controls
+namespace GraphX.Controls
 {
-    public class VertexLabelControl : ContentControl , IVertexLabelControl   
+#if METRO
+    [Bindable]
+#endif
+    public class VertexLabelControl : ContentControl, IVertexLabelControl
     {
+        internal Rect LastKnownRectSize;
 
-       public static readonly DependencyProperty AngleProperty = DependencyProperty.Register("Angle",
+
+        public static readonly DependencyProperty AngleProperty = DependencyProperty.Register("Angle",
                                                                                        typeof(double),
                                                                                        typeof(VertexLabelControl),
-                                                                                       new UIPropertyMetadata(0.0) );
+                                                                                       new PropertyMetadata(0.0, AngleChanged));
+
+        private static void AngleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var ctrl = d as UIElement;
+            if (ctrl == null)
+                return;
+            var tg = ctrl.RenderTransform as TransformGroup;
+            if (tg == null ) ctrl.RenderTransform = new RotateTransform {Angle = (double) e.NewValue, CenterX = .5, CenterY = .5};
+            else
+            {
+                var rt = tg.Children.FirstOrDefault(a => a is RotateTransform);
+                if (rt == null)
+                    tg.Children.Add(new RotateTransform {Angle = (double) e.NewValue, CenterX = .5, CenterY = .5});
+                else (rt as RotateTransform).Angle = (double) e.NewValue;
+            }
+        }
 
         /// <summary>
         /// Gets or sets label drawing angle in degrees
@@ -27,7 +60,7 @@ namespace GraphX.WPF.Controls
         public static readonly DependencyProperty LabelPositionProperty = DependencyProperty.Register("LabelPosition",
                                                                 typeof(Point),
                                                                 typeof(VertexLabelControl),
-                                                                new UIPropertyMetadata(new Point()));
+                                                                new PropertyMetadata(new Point()));
         /// <summary>
         /// Gets or sets label position if LabelPositionMode is set to Coordinates
         /// Position is always measured from top left VERTEX corner.
@@ -41,7 +74,7 @@ namespace GraphX.WPF.Controls
         public static readonly DependencyProperty LabelPositionModeProperty = DependencyProperty.Register("LabelPositionMode",
                                                                         typeof(VertexLabelPositionMode),
                                                                         typeof(VertexLabelControl),
-                                                                        new UIPropertyMetadata(VertexLabelPositionMode.Sides));
+                                                                        new PropertyMetadata(VertexLabelPositionMode.Sides));
         /// <summary>
         /// Gets or set label positioning mode
         /// </summary>
@@ -55,7 +88,7 @@ namespace GraphX.WPF.Controls
         public static readonly DependencyProperty LabelPositionSideProperty = DependencyProperty.Register("LabelPositionSide",
                                                                                 typeof(VertexLabelPositionSide),
                                                                                 typeof(VertexLabelControl),
-                                                                                new UIPropertyMetadata(VertexLabelPositionSide.BottomRight));
+                                                                                new PropertyMetadata(VertexLabelPositionSide.BottomRight));
         /// <summary>
         /// Gets or sets label position side if LabelPositionMode is set to Sides
         /// </summary>
@@ -67,18 +100,16 @@ namespace GraphX.WPF.Controls
 
         public VertexLabelControl()
         {
+#if WPF
             if (DesignerProperties.GetIsInDesignMode(this)) return;
+#elif METRO
+            DefaultStyleKey = typeof(VertexLabelControl);
+            if (DesignMode.DesignModeEnabled) return;
+#endif
 
             LayoutUpdated += VertexLabelControl_LayoutUpdated;
             HorizontalAlignment = HorizontalAlignment.Left;
             VerticalAlignment = VerticalAlignment.Top;
-        }
-
-        void VertexLabelControl_LayoutUpdated(object sender, EventArgs e)
-        {
-            var vc = GetVertexControl(VisualParent);
-            if(vc == null || !vc.ShowLabel) return;
-            UpdatePosition();
         }
 
         private static VertexControl GetVertexControl(DependencyObject parent)
@@ -97,7 +128,7 @@ namespace GraphX.WPF.Controls
         {
             if (double.IsNaN(DesiredSize.Width) || DesiredSize.Width == 0) return;
 
-            var vc = GetVertexControl(VisualParent);
+            var vc = GetVertexControl(GetParent());
             if (vc == null) return;
 
             if (LabelPositionMode == VertexLabelPositionMode.Sides)
@@ -133,10 +164,9 @@ namespace GraphX.WPF.Controls
                         throw new GX_InvalidDataException("UpdatePosition() -> Unknown vertex label side!");
                 }
                 LastKnownRectSize = new Rect(pt, DesiredSize);
-            } else
-            {
-                LastKnownRectSize = new Rect(LabelPosition, DesiredSize);
-            }
+            } 
+            else LastKnownRectSize = new Rect(LabelPosition, DesiredSize);
+
             Arrange(LastKnownRectSize);
         }
 
@@ -150,10 +180,26 @@ namespace GraphX.WPF.Controls
             Visibility = Visibility.Visible;
         }
 
-        internal Rect LastKnownRectSize;
+        void VertexLabelControl_LayoutUpdated(object sender, DefaultEventArgs e)
+        {
+            var vc = GetVertexControl(GetParent());
+            if (vc == null || !vc.ShowLabel) return;
+            UpdatePosition();
+        }
 
+        DependencyObject GetParent()
+        {
+#if WPF
+            return VisualParent;
+#elif METRO
+            return Parent;
+#endif
+        }
     }
 
+    /// <summary>
+    /// Contains different position modes for vertices
+    /// </summary>
     public enum VertexLabelPositionMode
     {
         /// <summary>

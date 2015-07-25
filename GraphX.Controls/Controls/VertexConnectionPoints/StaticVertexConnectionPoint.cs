@@ -1,12 +1,19 @@
-﻿using System;
+﻿#if WPF
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+#elif METRO
+using Windows.Foundation;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
+#endif
 using GraphX.PCL.Common.Enums;
 
-namespace GraphX.WPF.Controls
+namespace GraphX.Controls
 {
-    public class StaticVertexConnectionPoint: Image, IVertexConnectionPoint
+    public class StaticVertexConnectionPoint : ContentControl, IVertexConnectionPoint
     {
         #region Common part
 
@@ -17,7 +24,10 @@ namespace GraphX.WPF.Controls
 
 
         public static readonly DependencyProperty ShapeProperty =
-            DependencyProperty.Register("Shape", typeof(VertexShape), typeof(VertexControl), new UIPropertyMetadata(null));
+            DependencyProperty.Register("Shape", 
+                          typeof(VertexShape), 
+                          typeof(StaticVertexConnectionPoint), 
+                          new PropertyMetadata(VertexShape.Circle));
 
         /// <summary>
         /// Gets or sets shape form for connection point (affects math calculations for edge end placement)
@@ -63,22 +73,15 @@ namespace GraphX.WPF.Controls
 
         #endregion
 
-
         private VertexControl _vertexControl;
-        protected VertexControl VertexControl { get { return _vertexControl ?? (_vertexControl = GetVertexControl(VisualParent)); } }
+        protected VertexControl VertexControl { get { return _vertexControl ?? (_vertexControl = GetVertexControl(GetParent())); } }
 
         public StaticVertexConnectionPoint()
         {
             RenderTransformOrigin = new Point(.5, .5);
-            LayoutUpdated += StaticVertexConnector_LayoutUpdated;
-        }
-
-        void StaticVertexConnector_LayoutUpdated(object sender, EventArgs e)
-        {
-            var position = this.TranslatePoint(new Point(), VertexControl);
-            var vPos = VertexControl.GetPosition();
-            position = new Point(position.X + vPos.X, position.Y + vPos.Y);
-            RectangularSize = new Rect(position, DesiredSize);
+            VerticalAlignment = VerticalAlignment.Center;
+            HorizontalAlignment = HorizontalAlignment.Center;
+            LayoutUpdated += OnLayoutUpdated;
         }
 
         public void Update()
@@ -90,5 +93,32 @@ namespace GraphX.WPF.Controls
         {
             _vertexControl = null;
         }
+#if WPF
+        public DependencyObject GetParent()
+        {
+            return VisualParent;
+        }
+
+        protected virtual void OnLayoutUpdated(object sender, EventArgs e)
+        {
+            var position = TranslatePoint(new Point(), VertexControl);
+            var vPos = VertexControl.GetPosition();
+            position = new Point(position.X + vPos.X, position.Y + vPos.Y);
+            RectangularSize = new Rect(position, DesiredSize);
+        }
+#elif METRO
+        public DependencyObject GetParent()
+        {
+            return Parent;
+        }
+
+        protected virtual OnLayoutUpdated(object sender, object o)
+        {
+            var position = TransformToVisual(VertexControl).TransformPoint(new Point());
+            var vPos = VertexControl.GetPosition();
+            position = new Point(position.X + vPos.X, position.Y + vPos.Y);
+            RectangularSize = new Rect(position, DesiredSize);
+        }
+#endif
     }
 }

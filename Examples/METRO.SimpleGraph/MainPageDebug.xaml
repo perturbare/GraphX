@@ -5,7 +5,7 @@
     xmlns:local="using:METRO.SimpleGraph"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls1="using:GraphX.METRO.Controls"
+    xmlns:controls1="using:GraphX.Controls"
     mc:Ignorable="d">
 
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
@@ -45,17 +45,10 @@
                     <Image Stretch="Uniform" Source="Assets/refresh.png" />
                 </Button>
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Layout algorithm:" />
-                    <ComboBox x:Name="cboxLayout" />
+                    <TextBlock Text="Debug mode:" />
+                    <ComboBox x:Name="cboxDebug" Width="350" />
                 </StackPanel>
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Overlap algorithm:" />
-                    <ComboBox x:Name="cboxOverlap" />
-                </StackPanel>
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Edge routing algorithm:" />
-                    <ComboBox x:Name="cboxEdgeRouting" />
-                </StackPanel>
+                
             </StackPanel>
         </Grid>
 

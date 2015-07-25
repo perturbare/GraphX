@@ -1,9 +1,14 @@
 ﻿using System;
+#if WPF
 using System.Windows;
 using System.Windows.Media.Animation;
-using GraphX.WPF.Controls.Models;
+#elif METRO
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Media.Animation;
+#endif
+using GraphX.Controls.Models;
 
-namespace GraphX.WPF.Controls.Animations
+namespace GraphX.Controls.Animations
 {
     public sealed class DeleteFadeAnimation : IOneWayControlAnimation
     {
@@ -18,12 +23,19 @@ namespace GraphX.WPF.Controls.Animations
         {
             //create and run animation
             var story = new Storyboard();
-            var fadeAnimation = new DoubleAnimation(1, 0, new Duration(TimeSpan.FromSeconds(Duration)), FillBehavior.Stop);
-            fadeAnimation.Completed += (sender, e) => { OnCompleted(target); };
+            var fadeAnimation = new DoubleAnimation {Duration = new Duration(TimeSpan.FromSeconds(Duration)), FillBehavior = FillBehavior.Stop, From = 1, To = 0};
+            fadeAnimation.Completed += (sender, e) => OnCompleted(target);
             story.Children.Add(fadeAnimation);
             Storyboard.SetTarget(fadeAnimation, target as FrameworkElement);
+#if WPF
             Storyboard.SetTargetProperty(fadeAnimation, new PropertyPath(UIElement.OpacityProperty));
-            story.Begin(target as FrameworkElement);
+            story.Begin(target as FrameworkElement);            
+#elif METRO
+            Storyboard.SetTargetProperty(fadeAnimation, "Opacity");            
+            story.Begin();
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         public void AnimateVertex(VertexControl target)

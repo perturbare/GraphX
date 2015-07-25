@@ -1,8 +1,13 @@
 ﻿using System;
+#if WPF
 using System.Windows;
+#elif METRO
+using Windows.Foundation;
+using Windows.UI.Xaml;
+#endif
 using GraphX.PCL.Common.Enums;
 
-namespace GraphX.WPF.Controls
+namespace GraphX.Controls
 {
     public interface IVertexConnectionPoint : IDisposable
     {
@@ -14,7 +19,7 @@ namespace GraphX.WPF.Controls
         /// <summary>
         /// Gets or sets shape form for connection point (affects math calculations for edge end placement)
         /// </summary>
-        VertexShape Shape { get; }
+        VertexShape Shape { get; set; }
 
         void Hide();
         void Show();
@@ -22,5 +27,6 @@ namespace GraphX.WPF.Controls
         Rect RectangularSize { get; }
 
         void Update();
+        DependencyObject GetParent();
     }
 }

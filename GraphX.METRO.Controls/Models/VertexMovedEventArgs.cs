@@ -1,6 +1,6 @@
 ﻿using Windows.UI.Xaml.Input;
 
-namespace GraphX.METRO.Controls.Models
+namespace GraphX.Controls.Models
 {
     public sealed class VertexMovedEventArgs : System.EventArgs
     {
@@ -8,7 +8,6 @@ namespace GraphX.METRO.Controls.Models
         public PointerRoutedEventArgs Args { get; private set; }
 
         public VertexMovedEventArgs(VertexControl vc, PointerRoutedEventArgs e)
-            : base()
         {
             Args = e;
             VertexControl = vc;

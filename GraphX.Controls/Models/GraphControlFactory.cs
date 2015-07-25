@@ -1,6 +1,10 @@
-﻿using System.Windows;
+﻿#if WPF
+using System.Windows;
+#elif METRO
+using Windows.UI.Xaml;
+#endif
 
-namespace GraphX.WPF.Controls.Models
+namespace GraphX.Controls.Models
 {
     /// <summary>
     /// Factory class responsible for VertexControl and EdgeControl objects creation

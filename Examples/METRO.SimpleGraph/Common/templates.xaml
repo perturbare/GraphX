@@ -1,8 +1,8 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls1="using:GraphX.METRO.Controls">
-
+    xmlns:controls1="using:GraphX.Controls">
+    
     <Style TargetType="controls1:VertexControl">
         <Setter Property="Background" Value="Transparent"/>
 
@@ -112,22 +112,16 @@
                             </Path.Stroke>
                         </Path>
 
-                       <controls1:EdgePointerPath x:Name="PART_EdgePointerForTarget" Opacity="239" Scale="8,8">
-                            <controls1:EdgePointerPath.Path>
-                                <Path Data="M0,0.5 L1,1 1,0" Fill="Yellow" />
-                            </controls1:EdgePointerPath.Path>
-                        </controls1:EdgePointerPath>
+                        <controls1:DefaultEdgePointer NeedRotation="true" x:Name="PART_EdgePointerForTarget" >
+                            <Path Data="M0,0.5 L1,1 1,0" Fill="Yellow" Stretch="Uniform" Width="15" Height="15"/>
+                        </controls1:DefaultEdgePointer>
 
-                        <!-- <controls1:EdgePointerImage NeedRotation="true" x:Name="PART_EdgePointerForSource" >
-                            <controls1:EdgePointerImage.Image>
-                                <Image Source="/Assets/tr_red.png" Width="15" Height="15"/>
-                            </controls1:EdgePointerImage.Image>
-                        </controls1:EdgePointerImage>
-                        <controls1:EdgePointerImage NeedRotation="true" x:Name="PART_EdgePointerForTarget" >
-                            <controls1:EdgePointerImage.Image>
-                                <Image Source="/Assets/tr_grren.png" Width="15" Height="15"/>
-                            </controls1:EdgePointerImage.Image>
-                        </controls1:EdgePointerImage>-->
+                        <Path x:Name="PART_SelfLoopedEdge" 
+                              Width="10" 
+                              Height="10" 
+                              Stretch="Uniform" 
+                              Fill="{TemplateBinding Foreground}" 
+                              Data="F1 M 17.4167,32.25L 32.9107,32.25L 38,18L 43.0893,32.25L 58.5833,32.25L 45.6798,41.4944L 51.4583,56L 38,48.0833L 26.125,56L 30.5979,41.7104L 17.4167,32.25 Z "/>
 
                         <controls1:EdgeLabelControl x:Name="PART_edgeLabel" 
                           Content="{Binding Text}"
@@ -177,6 +171,5 @@
             </Setter.Value>
         </Setter>
     </Style>
-
 
 </ResourceDictionary>

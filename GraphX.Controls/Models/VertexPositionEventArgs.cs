@@ -1,14 +1,18 @@
 ﻿using System;
+#if WPF
 using System.Windows;
+#elif METRO
+using Windows.Foundation;
+#endif
 
-namespace GraphX.WPF.Controls.Models
+namespace GraphX.Controls.Models
 {
     public sealed class VertexPositionEventArgs : EventArgs
     {
         /// <summary>
         /// Vertex control
         /// </summary>
-        public VertexControl VertexControl { get; private set; }
+        public VertexControlBase VertexControl { get; private set; }
         /// <summary>
         /// Attached coordinates X and Y 
         /// </summary>
@@ -18,7 +22,7 @@ namespace GraphX.WPF.Controls.Models
         /// </summary>
         public Point OffsetPosition { get; private set; }
 
-        public VertexPositionEventArgs(Point offset, Point pos, VertexControl vc)
+        public VertexPositionEventArgs(Point offset, Point pos, VertexControlBase vc)
         {
             OffsetPosition = offset;
             VertexControl = vc;

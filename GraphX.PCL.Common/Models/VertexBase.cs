@@ -6,6 +6,11 @@ namespace GraphX.PCL.Common.Models
     public abstract class VertexBase: IGraphXVertex
     {
         /// <summary>
+        /// Gets or sets optional group identificator
+        /// </summary>
+        public int GroupId { get; set; }
+
+        /// <summary>
         /// Skip vertex in algo calc and visualization
         /// </summary>
         public ProcessingOptionEnum SkipProcessing { get; set; }

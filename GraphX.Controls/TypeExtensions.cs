@@ -1,12 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
-namespace GraphX.WPF.Controls
+namespace GraphX.Controls
 {
     public static class TypeExtensions
     {
+        public static void Offset(this Point point, Point value)
+        {
+            point.X = point.X + value.X;
+            point.Y = point.Y + value.Y;
+        }
+
         public static Point ToWindows(this Measure.Point point)
         {
             return new Point(point.X, point.Y);
@@ -60,6 +67,11 @@ namespace GraphX.WPF.Controls
             return new Point(rect.X + rect.Width * .5, rect.Y + rect.Height * .5);
         }
 
+        public static Point Subtract(this Point pt, Point pt2)
+        {
+            return new Point(pt.X - pt2.X, pt.Y - pt2.Y);
+        }
+
         /// <summary>
         /// Not for METRO
         /// </summary>
@@ -77,6 +89,12 @@ namespace GraphX.WPF.Controls
                                                .OfType<DependencyObject>()
                                                .SelectMany(FindLogicalChildren<T>))
                 yield return c;
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> list, Action<T> func)
+        {
+            foreach (var item in list)
+                func(item);
         }
     }
 }

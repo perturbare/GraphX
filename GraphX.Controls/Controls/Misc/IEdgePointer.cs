@@ -1,8 +1,15 @@
 ﻿using System;
+#if WPF
 using System.Windows;
+#elif METRO
+using Windows.Foundation;
+using Vector = GraphX.Measure.Vector;
+using Windows.UI.Xaml;
+#endif
 
-namespace GraphX.WPF.Controls
-{   
+
+namespace GraphX.Controls
+{  
     public interface IEdgePointer: IDisposable
     {                                                                                             
         /// <summary>
@@ -15,7 +22,14 @@ namespace GraphX.WPF.Controls
         /// </summary>
         Point Update(Point? position, Vector direction, double angle = 0d);
 
+        void SetManualPosition(Point position);
+
         void Hide();
         void Show();
+
+        /// <summary>
+        /// Gets is control visible
+        /// </summary>
+        Visibility Visibility { get; }
     }
 }

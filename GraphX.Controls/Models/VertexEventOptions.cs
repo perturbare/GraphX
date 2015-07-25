@@ -1,6 +1,6 @@
 ﻿using GraphX.PCL.Common.Enums;
 
-namespace GraphX.WPF.Controls.Models
+namespace GraphX.Controls.Models
 {
     public sealed class VertexEventOptions
     {
@@ -45,6 +45,7 @@ namespace GraphX.WPF.Controls.Models
         } }
         private bool _mousedblclick = true;
 
+#if WPF
         /// <summary>
         /// Gets or sets if position trace enabled. If enabled then PositionChanged event will be rised on each X or Y property change.
         /// True by default. 
@@ -63,6 +64,7 @@ namespace GraphX.WPF.Controls.Models
             } 
         }
         private bool _poschange = true;
+#endif
 
         private VertexControl _vc;
 

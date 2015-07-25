@@ -108,3 +108,9 @@ Backup*/
 UpgradeLog*.XML
 /Nuget/*.nupkg
 *.suo
+*.DotSettings
+*.bak
+
+#LocalHistory VS plugin
+.localhistory/
+.settings/launch.json

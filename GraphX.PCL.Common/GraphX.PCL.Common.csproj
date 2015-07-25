@@ -48,6 +48,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <None Include="packages.config" />
     <None Include="signature.snk" />
   </ItemGroup>
   <ItemGroup>
@@ -64,15 +65,15 @@
     <Compile Include="Enums\OverlapRemovalAlgorithmTypeEnum.cs" />
     <Compile Include="Enums\ProcessingOptionEnum.cs" />
     <Compile Include="Enums\VertexShape.cs" />
+    <Compile Include="Exceptions\GX_ObsoleteException.cs" />
     <Compile Include="Exceptions\GX_GeneralException.cs" />
     <Compile Include="Exceptions\GX_InvalidDataException.cs" />
     <Compile Include="Exceptions\GX_ObjectNotFoundException.cs" />
     <Compile Include="Exceptions\GX_SerializationException.cs" />
+    <Compile Include="Helpers\CommonExtensions.cs" />
     <Compile Include="Interfaces\IAlgorithmParameters.cs" />
     <Compile Include="Interfaces\IAlgorithmStorage.cs" />
     <Compile Include="Interfaces\ICloneable.cs" />
-    <Compile Include="Interfaces\ICore.cs" />
-    <Compile Include="Interfaces\IEdgeRoutingAlgorithm.cs" />
     <Compile Include="Interfaces\IEdgeRoutingParameters.cs" />
     <Compile Include="Interfaces\ILayoutEdgeRouting.cs" />
     <Compile Include="Interfaces\IExternalEdgeRouting.cs" />
@@ -106,16 +107,23 @@
     <Compile Include="Measure\Thickness.cs" />
     <Compile Include="Measure\Vector.cs" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Reference Include="QuickGraph">
-      <HintPath>..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.dll</HintPath>
+    <Reference Include="QuickGraph, Version=3.6.61114.0, Culture=neutral, PublicKeyToken=f3fb40175eec2af3, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuickGraphPCL.3.6.61114.2\lib\portable-win+net4+sl5+wp8+win8+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\QuickGraph.dll</HintPath>
+      <Private>True</Private>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
+    <Reference Include="QuickGraph.Graphviz, Version=3.6.61114.0, Culture=neutral, PublicKeyToken=f3fb40175eec2af3, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuickGraphPCL.3.6.61114.2\lib\portable-win+net4+sl5+wp8+win8+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\QuickGraph.Graphviz.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>mkdir "$(SolutionDir)bin\$(ConfigurationName)"
+copy  /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)bin\$(ConfigurationName)\$(TargetName).dll"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

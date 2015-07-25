@@ -137,6 +137,7 @@
     <Compile Include="Algorithms\LayoutAlgorithms\LayoutUtil.cs" />
     <Compile Include="Algorithms\LayoutAlgorithms\ParameterizedLayoutAlgorithmBase.cs" />
     <Compile Include="Algorithms\LayoutAlgorithms\Random\RandomLayoutAlgorithm.cs" />
+    <Compile Include="Algorithms\LayoutAlgorithms\Random\RandomLayoutAlgorithmParams.cs" />
     <Compile Include="Algorithms\LayoutAlgorithms\Tree\BalloonTreeLayoutAlgorithm.cs" />
     <Compile Include="Algorithms\LayoutAlgorithms\Tree\BalloonTreeLayoutParameters.cs" />
     <Compile Include="Algorithms\LayoutAlgorithms\Tree\SimpleTreeLayoutAlgorithm.cs" />
@@ -171,12 +172,21 @@
     <None Include="signature.snk" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="QuickGraph">
-      <HintPath>..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.dll</HintPath>
+    <Reference Include="QuickGraph, Version=3.6.61114.0, Culture=neutral, PublicKeyToken=f3fb40175eec2af3, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuickGraphPCL.3.6.61114.2\lib\portable-win+net4+sl5+wp8+win8+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\QuickGraph.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="QuickGraph.Graphviz, Version=3.6.61114.0, Culture=neutral, PublicKeyToken=f3fb40175eec2af3, processorArchitecture=MSIL">
+      <HintPath>..\packages\QuickGraphPCL.3.6.61114.2\lib\portable-win+net4+sl5+wp8+win8+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\QuickGraph.Graphviz.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>mkdir "$(SolutionDir)bin\$(ConfigurationName)"
+copy  /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)bin\$(ConfigurationName)\$(TargetName).dll"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

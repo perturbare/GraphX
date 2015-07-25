@@ -6,7 +6,7 @@ using System.Linq;
 using System.Windows;
 using GraphX.PCL.Common.Enums;
 using GraphX.PCL.Logic.Algorithms.LayoutAlgorithms;
-using GraphX.WPF.Controls;
+using GraphX.Controls;
 
 /* Some notes about the main objects and types in this example:
  * 
@@ -28,8 +28,6 @@ namespace SimpleGraph
     /// </summary>
     public partial class MainWindow : Window, IDisposable
     {
-        private GraphExample _dataGraph;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -68,10 +66,10 @@ namespace SimpleGraph
         void gg_but_randomgraph_Click(object sender, RoutedEventArgs e)
         {
             //Lets generate configured graph using pre-created data graph assigned to LogicCore object.
-            //Optionaly we set first method param to True (False by default) so this method will automatically generate edges
-            //  By default edges are not generated. That allows to increase performance in cases where edges don't need to be drawn at first.
+            //Optionaly we set first method param to True (True by default) so this method will automatically generate edges
+            //  If you want to increase performance in cases where edges don't need to be drawn at first you can set it to False.
             //  You can also handle edge generation by calling manually Area.GenerateAllEdges() method.
-            //Optionaly we set seconf param to True (True by default) so this method will automaticaly checks and assigns missing unique data ids
+            //Optionaly we set second param to True (True by default) so this method will automaticaly checks and assigns missing unique data ids
             //for edges and vertices in _dataGraph.
             //Note! Area.Graph property will be replaced by supplied _dataGraph object (if any).
             Area.GenerateGraph(true, true);
@@ -111,7 +109,7 @@ namespace SimpleGraph
                 //This ID is needed for several features such as serialization and edge routing algorithms.
                 //If you don't need any custom IDs and you are using automatic Area.GenerateGraph() method then you can skip ID assignment
                 //because specified method automaticaly assigns missing data ids (this behavior controlled by method param).
-                var dataVertex = new DataVertex("MyVertex " + i) { ID = i };
+                var dataVertex = new DataVertex("MyVertex " + i);
                 //Add vertex to data graph
                 dataGraph.AddVertex(dataVertex);
             }
@@ -159,7 +157,7 @@ namespace SimpleGraph
             logicCore.AsyncAlgorithmCompute = false;
 
             //Finally assign logic core to GraphArea object
-            Area.LogicCore = logicCore;// as IGXLogicCore<DataVertex, DataEdge, BidirectionalGraph<DataVertex, DataEdge>>;
+            Area.LogicCore = logicCore;
         }
 
         public void Dispose()

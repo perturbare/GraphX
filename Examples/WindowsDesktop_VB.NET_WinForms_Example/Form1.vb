@@ -4,7 +4,7 @@ Imports GraphX.PCL.Common.Enums
 Imports GraphX.PCL.Logic.Algorithms.LayoutAlgorithms
 Imports GraphX.PCL.Logic.Algorithms.OverlapRemoval
 Imports GraphX.PCL.Logic.Models
-Imports GraphX.WPF.Controls
+Imports GraphX.Controls
 Imports QuickGraph
 
 Public Class Form1
@@ -53,7 +53,6 @@ Public Class Form1
         Dim dataGraph = New GraphExample()
         For i As Integer = 1 To 9
             Dim dataVertex = New DataVertex("MyVertex " & i)
-            dataVertex.ID = i
             dataGraph.AddVertex(dataVertex)
         Next
         Dim vlist = dataGraph.Vertices.ToList()
